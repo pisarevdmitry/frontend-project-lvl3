@@ -6,7 +6,8 @@ import watch from './view';
 import resources from '../locales';
 
 const validate = (value, state) => {
-  const schema = yup.string().required().url().notOneOf(state.addedUrls);
+  const addedUrls = state.addedUrls.map((url) => url.link);
+  const schema = yup.string().required().url().notOneOf(addedUrls);
   try {
     schema.validateSync(value);
     return null;
@@ -18,22 +19,19 @@ const validate = (value, state) => {
 const parseRss = (rss) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rss, 'application/xml');
-  const feedId = _.uniqueId();
   const posts = Array.from(doc.querySelectorAll('item'));
   const mapped = posts.map((post) => (
     {
-      feedId,
-      id: _.uniqueId(),
       title: post.querySelector('title').textContent,
       description: post.querySelector('description').textContent,
-      link: post.querySelector('link'),
+      link: post.querySelector('link').textContent,
       pubDate: new Date(post.querySelector('pubDate').textContent),
+      guid: post.querySelector('guid').textContent,
     }
   ));
 
   return {
     feed: {
-      id: feedId,
       title: doc.querySelector('channel title').textContent,
       description: doc.querySelector('channel description').textContent,
     },
@@ -42,7 +40,7 @@ const parseRss = (rss) => {
 };
 
 const getRssData = (url) => {
-  const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}`;
+  const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&&timestamp=${new Date().getTime()}`;
   return axios.get(fetchUrl)
     .then(({ data }) => {
       const { contents, status: { http_code: statusCode } } = data;
@@ -65,18 +63,54 @@ const addRss = (e, state) => {
   state.formState = 'valid';
   getRssData(value)
     .then((data) => {
-      state.addedUrls.push(value);
       e.target.reset();
-      const parsedData = parseRss(data);
+      const { feed, posts } = parseRss(data);
+      const feedId = _.uniqueId();
+      state.addedUrls.push({ link: value, feedId });
+      feed.id = feedId;
+      const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
       state.formMessage = { type: 'success', value: i18n.t('added') };
-      const newFeeds = [parsedData.feed, ...state.feeds];
-      const newPosts = [...state.posts, ...parsedData.posts];
+      const newFeeds = [feed, ...state.feeds];
+      const newPosts = [...state.posts, ...createdPosts];
       state.feeds = newFeeds;
       state.posts = newPosts;
     })
     .catch((error) => {
       state.formMessage = { type: 'error', value: error.message };
     });
+};
+
+const findNewPosts = (state, feedId, posts) => {
+  const existedPosts = state.posts.filter((post) => post.feedId === feedId);
+  const keyed = (_.keyBy(existedPosts, 'guid'));
+  return posts.filter((post) => !keyed[post.guid]);
+};
+
+const updateRss = (state) => {
+  if (state.addedUrls.length === 0) {
+    setTimeout(() => {
+      updateRss(state);
+    }, 5000);
+  }
+  const promises = state.addedUrls.map(({ link, feedId }) => (
+    getRssData(link).then((data) => ({ feedId, data })).catch(() => null)
+  ));
+  Promise.all(promises).then((data) => {
+    const filtered = data.filter((el) => el);
+    const processed = filtered.map((el) => {
+      const parsedData = parseRss(el.data);
+      console.log(parsedData);
+      const newPosts = findNewPosts(state, el.feedId, parsedData.posts);
+      return newPosts.map((post) => ({ ...post, feedId: el.feedId, id: _.uniqueId() }));
+    });
+    const createdPosts = processed.flat();
+    if (createdPosts.length !== 0) {
+      state.posts = [...state.posts, ...createdPosts];
+    }
+    setTimeout(() => {
+      updateRss(state);
+    }, 5000);
+  });
 };
 
 const app = () => {
@@ -103,6 +137,9 @@ const app = () => {
     };
     const watched = watch(state);
     form.addEventListener('submit', (e) => addRss(e, watched));
+    setTimeout(() => {
+      updateRss(watched);
+    }, 5000);
   });
 };
 
