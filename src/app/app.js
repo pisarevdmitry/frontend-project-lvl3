@@ -1,12 +1,18 @@
 import axios from 'axios';
 import * as yup from 'yup';
+import i18n from 'i18next';
 import _ from 'lodash';
 import watch from './view';
+import resources from '../locales';
 
 const validate = (value, state) => {
-  const schema = yup.string().required().url();
-  if (state.addedUrls.includes(value)) return 'Rss уже существует';
-  return schema.isValidSync(value) ? '' : 'Ссылка должна быть валидным URL';
+  const schema = yup.string().required().url().notOneOf(state.addedUrls);
+  try {
+    schema.validateSync(value);
+    return null;
+  } catch (e) {
+    return e.message;
+  }
 };
 
 const parseRss = (rss) => {
@@ -41,7 +47,7 @@ const getRssData = (url) => {
     .then(({ data }) => {
       const { contents, status: { http_code: statusCode } } = data;
       if (statusCode !== 200) {
-        return Promise.reject(new Error('ошибка сети, попробуйте позднее'));
+        return Promise.reject(new Error(i18n.t('networkError')));
       }
       return contents;
     });
@@ -51,7 +57,6 @@ const addRss = (e, state) => {
   e.preventDefault();
   const { value } = e.target.url;
   const validationError = validate(value, state);
-  console.log(validationError);
   if (validationError) {
     state.formState = 'invalid';
     state.formMessage = { type: 'error', value: validationError };
@@ -63,7 +68,7 @@ const addRss = (e, state) => {
       state.addedUrls.push(value);
       e.target.reset();
       const parsedData = parseRss(data);
-      state.formMessage = { type: 'success', value: 'Rss добавлен' };
+      state.formMessage = { type: 'success', value: i18n.t('added') };
       const newFeeds = [parsedData.feed, ...state.feeds];
       const newPosts = [...state.posts, ...parsedData.posts];
       state.feeds = newFeeds;
@@ -75,16 +80,30 @@ const addRss = (e, state) => {
 };
 
 const app = () => {
-  const form = document.querySelector('form');
-  const state = {
-    formMessage: null,
-    addedUrls: [],
-    formState: 'valid',
-    feeds: [],
-    posts: [],
-  };
-  const watched = watch(state);
-  form.addEventListener('submit', (e) => addRss(e, watched));
+  i18n.init({
+    lng: 'ru',
+    resources,
+  }).then(() => {
+    yup.setLocale({
+      mixed: {
+        notOneOf: i18n.t('validate.exists'),
+      },
+      string: {
+        required: i18n.t('validate.required'),
+        url: i18n.t('validate.url'),
+      },
+    });
+    const form = document.querySelector('form');
+    const state = {
+      formMessage: null,
+      addedUrls: [],
+      formState: 'valid',
+      feeds: [],
+      posts: [],
+    };
+    const watched = watch(state);
+    form.addEventListener('submit', (e) => addRss(e, watched));
+  });
 };
 
 export default app;
