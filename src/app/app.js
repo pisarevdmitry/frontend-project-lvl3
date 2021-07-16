@@ -53,7 +53,7 @@ const getRssData = (url) => {
 
 const addRss = (e, state) => {
   e.preventDefault();
-  const { value } = e.target.url;
+  const { value } = e.target.querySelector('input');
   const validationError = validate(value, state);
   if (validationError) {
     state.formState = 'invalid';
@@ -99,7 +99,6 @@ const updateRss = (state) => {
     const filtered = data.filter((el) => el);
     const processed = filtered.map((el) => {
       const parsedData = parseRss(el.data);
-      console.log(parsedData);
       const newPosts = findNewPosts(state, el.feedId, parsedData.posts);
       return newPosts.map((post) => ({ ...post, feedId: el.feedId, id: _.uniqueId() }));
     });

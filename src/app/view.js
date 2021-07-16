@@ -26,7 +26,8 @@ const renderFormMessage = (feedbackContainer, { type, value }) => {
   feedbackContainer.textContent = value;
 };
 
-const renderFeeds = (feedsContainer, feeds) => {
+const renderFeeds = (feeds) => {
+  const feedsContainer = document.querySelector('.feeds');
   feedsContainer.innerHTML = '';
   const card = createCard('Фиды');
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
@@ -43,14 +44,16 @@ const renderFeeds = (feedsContainer, feeds) => {
   card.append(listGroup);
   feedsContainer.append(card);
 };
-const renderPosts = (postsContainer, posts) => {
+const renderPosts = (posts, ui) => {
+  const postsContainer = document.querySelector('.posts');
   postsContainer.innerHTML = '';
   const card = createCard('Посты');
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   const sorted = _.orderBy(posts, 'pubDate', 'desc');
   sorted.forEach((post) => {
     const item = createElem('li', 'list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-    const link = createElem('a', 'fw-bold');
+    const linkClass = ui.visitedLinks[post.id] ? 'fw-normal' : 'fw-bold';
+    const link = createElem('a', linkClass);
     link.dataset.id = post.id;
     link.setAttribute('src', post.link);
     link.setAttribute('target', '_blank');
@@ -77,11 +80,36 @@ const renderInputStatus = (input, isValid) => {
   }
 };
 
+const renderModal = (e, state, uiState) => {
+  const title = e.target.querySelector('.modal-title');
+  const body = e.target.querySelector('.modal-body');
+  const link = e.target.querySelector('.full-article');
+  const { id } = e.relatedTarget.dataset;
+  uiState.visitedLinks[id] = id;
+  const post = _.find(state.posts, (el) => el.id === id);
+  title.textContent = post.title;
+  body.textContent = post.description;
+  link.setAttribute('href', post.link);
+};
+
+const updatePostHeader = (id) => {
+  const header = document.querySelector(`a[data-id="${id}"]`);
+  header.classList.remove('fw-bold');
+  header.classList.add('fw-normal');
+};
+
 const watch = (state) => {
   const input = document.querySelector('input');
   const formFeedback = document.querySelector('.feedback');
-  const feedContainer = document.querySelector('.feeds');
-  const postsContainer = document.querySelector('.posts');
+  const modal = document.querySelector('#modal');
+  const ui = {
+    visitedLinks: {},
+  };
+  const watchedUi = onChange(ui, (path, value) => {
+    if (path.includes('visitedLinks')) {
+      updatePostHeader(value);
+    }
+  });
   const watched = onChange(state, (path, value) => {
     switch (path) {
       case 'formMessage': {
@@ -93,17 +121,18 @@ const watch = (state) => {
         break;
       }
       case 'feeds': {
-        renderFeeds(feedContainer, value);
+        renderFeeds(value);
         break;
       }
       case 'posts': {
-        renderPosts(postsContainer, value);
+        renderPosts(value, watchedUi);
         break;
       }
       default:
         break;
     }
   });
+  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watched, watchedUi));
   return watched;
 };
 
