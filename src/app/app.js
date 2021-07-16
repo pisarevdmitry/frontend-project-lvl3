@@ -67,6 +67,7 @@ const addRss = (e, state) => {
   state.formState = 'valid';
   getRssData(value)
     .then((data) => {
+      console.log(data);
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRss(data);
       e.target.reset();
