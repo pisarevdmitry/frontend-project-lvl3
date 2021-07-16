@@ -20,6 +20,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: './index.html',
+      inject: 'body',
     }),
     new MiniCssExtractPlugin({
       filename: 'styles.css',
