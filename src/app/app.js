@@ -44,10 +44,13 @@ const getRssData = (url) => {
   return axios.get(fetchUrl)
     .then((res) => {
       console.log(res, url);
-      const { data } = res;
-      const { contents, status: { http_code: statusCode } } = data;
-      if (statusCode !== 200) {
+      const { data, status } = res;
+      const { contents } = data;
+      if (status !== 200) {
         return Promise.reject(new Error(i18n.t('networkError')));
+      }
+      if (!contents) {
+        return Promise.reject(new Error(i18n.t('invalidRss')));
       }
       return contents;
     });
