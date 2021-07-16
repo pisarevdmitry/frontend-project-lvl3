@@ -45,8 +45,7 @@ const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
   return axios.get(fetchUrl)
     .then((res) => {
-      const { data } = res;
-      const { contents } = data;
+      const { data: contents } = res;
       return contents;
     }).catch((e) => {
       console.log(e);
