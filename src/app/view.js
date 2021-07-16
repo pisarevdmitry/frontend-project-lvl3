@@ -132,6 +132,7 @@ const watch = (state) => {
         break;
     }
   });
+  console.log(modal, document.querySelector('#modal'), document.querySelector('.modal'));
   modal.addEventListener('show.bs.modal', (e) => renderModal(e, watched, watchedUi));
   return watched;
 };
