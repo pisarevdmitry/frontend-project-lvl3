@@ -39,11 +39,8 @@ const parseRss = (rss) => {
   };
 };
 
-const getRssData = (path) => {
-  const url = new URL(path);
-  url.searchParams.append('disableCache', 'true');
-  console.log(url.toString(), path);
-  const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&&timestamp=${new Date().getTime()}`;
+const getRssData = (link) => {
+  const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(link)}&disableCache=true`;
   return axios.get(fetchUrl)
     .then(({ data }) => {
       const { contents, status: { http_code: statusCode } } = data;
