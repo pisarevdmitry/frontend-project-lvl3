@@ -58,6 +58,7 @@ const renderPosts = (posts, ui) => {
     link.setAttribute('src', post.link);
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');
+    link.setAttribute('role', 'link');
     link.textContent = post.title;
     const button = createElem('button', 'btn', 'btn-outline-primary', 'btn-sm');
     button.setAttribute('type', 'button');
