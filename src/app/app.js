@@ -1,3 +1,5 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/js/dist/modal';
 import axios from 'axios';
 import * as yup from 'yup';
 import i18n from 'i18next';
@@ -46,7 +48,6 @@ const getRssData = (url) => {
   return axios.get(fetchUrl)
     .then((res) => {
       const { data: { contents } } = res;
-      console.log(contents);
       return contents;
     }).catch(() => Promise.reject(new Error(i18n.t('networkError'))));
 };
