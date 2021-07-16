@@ -19,7 +19,6 @@ const validate = (value, state) => {
 const parseRss = (rss) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rss, 'application/xml');
-  console.log(doc);
   const channel = doc.querySelector('channel');
   if (!channel) throw new Error(i18n.t('invalidRss'));
   const posts = Array.from(doc.querySelectorAll('item'));
@@ -46,7 +45,7 @@ const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
   return axios.get(fetchUrl)
     .then((res) => {
-      const { data} = res;
+      const { data } = res;
       const { contents } = data;
       return contents;
     }).catch((e) => {
@@ -67,7 +66,6 @@ const addRss = (e, state) => {
   state.formState = 'valid';
   getRssData(value)
     .then((data) => {
-      //console.log(data);
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRss(data);
       e.target.reset();
@@ -97,6 +95,7 @@ const updateRss = (state) => {
     setTimeout(() => {
       updateRss(state);
     }, 5000);
+    return;
   }
   const promises = state.addedUrls.map(({ link, feedId }) => (
     getRssData(link).then((data) => ({ feedId, data })).catch(() => null)

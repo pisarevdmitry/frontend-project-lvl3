@@ -8,5 +8,3 @@ const init = () => {
   });
 };
 init();
-
-export default app;
