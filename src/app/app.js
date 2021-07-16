@@ -54,9 +54,9 @@ const getRssData = (url) => {
       }
       return contents;
     }).catch((e) => {
-      console.log(e)
+      console.log(e);
       return Promise.reject(new Error(e.message));
-    };
+    });
 };
 
 const addRss = (e, state) => {
