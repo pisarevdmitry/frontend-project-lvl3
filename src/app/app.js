@@ -42,9 +42,10 @@ const parseRss = (rss) => {
 const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
   return axios.get(fetchUrl)
-    .then(({ data }) => {
+    .then((res) => {
+      console.log(res, url);
+      const { data } = res;
       const { contents, status: { http_code: statusCode } } = data;
-      console.log(data, url);
       if (statusCode !== 200) {
         return Promise.reject(new Error(i18n.t('networkError')));
       }
