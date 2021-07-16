@@ -9,4 +9,4 @@ const init = () => {
 };
 init();
 
-export default init;
+export default app;
