@@ -3,4 +3,4 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/34a29e5c4f8383278885/maintainability)](https://codeclimate.com/github/pisarevdmitry/frontend-project-lvl3/maintainability)
 ![example workflow](https://github.com/pisarevdmitry/frontend-project-lvl3/actions/workflows/main.yml/badge.svg)
 
-VerselLink: https://frontend-project-lvl3-cft9badou-jedi59-yandexru.vercel.app/
+VerselLink: https://frontend-project-lvl3-peach-sigma.vercel.app/
