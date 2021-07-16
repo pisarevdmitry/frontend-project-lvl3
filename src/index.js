@@ -3,10 +3,8 @@ import 'bootstrap/js/dist/modal';
 import app from './app/app';
 
 const init = () => {
-  document.addEventListener('DOMContentLoaded', () => {
-    app();
-  });
+  app();
 };
 init();
 
-export default app;
+export default init;
