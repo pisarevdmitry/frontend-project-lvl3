@@ -6,5 +6,4 @@ const init = () => {
   app();
 };
 init();
-
-export default init;
+export default app;
