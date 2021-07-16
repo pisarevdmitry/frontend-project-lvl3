@@ -49,6 +49,7 @@ const getRssData = (url) => {
       if (status !== 200) {
         return Promise.reject(new Error(i18n.t('networkError')));
       }
+      console.log(contents);
       if (!contents) {
         return Promise.reject(new Error(i18n.t('invalidRss')));
       }
