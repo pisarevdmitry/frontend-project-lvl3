@@ -15,7 +15,7 @@ const createCard = (content) => {
   return card;
 };
 
-const renderFormMessage = (feedbackContainer, { type, value }) => {
+const renderFeedback = (feedbackContainer, { type, value }) => {
   if (type === 'error') {
     feedbackContainer.classList.remove('text-success');
     feedbackContainer.classList.add('text-danger');
@@ -72,11 +72,29 @@ const renderPosts = (posts, ui) => {
   card.append(listGroup);
   postsContainer.append(card);
 };
-const renderInputStatus = (input, isValid) => {
-  if (isValid) {
-    input.classList.remove('is-invalid');
-  } else {
-    input.classList.add('is-invalid');
+const updateForm = (form, state) => {
+  const input = form.querySelector('input');
+  const button = form.querySelector('button');
+  switch (state) {
+    case 'ready': {
+      button.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      input.classList.remove('is-invalid');
+      break;
+    }
+    case 'processed': {
+      button.setAttribute('disabled', null);
+      input.setAttribute('readonly', null);
+      break;
+    }
+    case 'invalid': {
+      button.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      input.classList.add('is-invalid');
+      break;
+    }
+    default:
+      throw new Error('unknow state');
   }
 };
 
@@ -99,7 +117,7 @@ const updatePostHeader = (id) => {
 };
 
 const watch = (state) => {
-  const input = document.querySelector('input');
+  const form = document.querySelector('form');
   const formFeedback = document.querySelector('.feedback');
   const modal = document.querySelector('#modal');
   const ui = {
@@ -113,11 +131,11 @@ const watch = (state) => {
   const watched = onChange(state, (path, value) => {
     switch (path) {
       case 'formMessage': {
-        renderFormMessage(formFeedback, value);
+        renderFeedback(formFeedback, value);
         break;
       }
       case 'formState': {
-        renderInputStatus(input, value === 'valid');
+        updateForm(form, value);
         break;
       }
       case 'feeds': {

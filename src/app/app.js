@@ -56,6 +56,7 @@ const getRssData = (url) => {
 
 const addRss = (e, state) => {
   e.preventDefault();
+  state.formState = 'processed';
   const { value } = e.target.querySelector('input');
   const validationError = validate(value, state);
   if (validationError) {
@@ -63,9 +64,9 @@ const addRss = (e, state) => {
     state.formMessage = { type: 'error', value: validationError };
     return;
   }
-  state.formState = 'valid';
   getRssData(value)
     .then((data) => {
+      state.formState = 'ready';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRss(data);
       e.target.reset();
@@ -135,7 +136,7 @@ const app = () => {
     const state = {
       formMessage: null,
       addedUrls: [],
-      formState: 'valid',
+      formState: 'ready',
       feeds: [],
       posts: [],
     };
