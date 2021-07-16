@@ -48,11 +48,15 @@ const getRssData = (url) => {
     .then((res) => {
       const { data, status } = res;
       const { contents } = data;
+      console.log(status);
       if (status !== 200) {
         return Promise.reject(new Error(i18n.t('networkError')));
       }
       return contents;
-    });
+    }).catch((e) => {
+      console.log(e)
+      return Promise.reject(new Error(e.message));
+    };
 };
 
 const addRss = (e, state) => {
@@ -67,7 +71,7 @@ const addRss = (e, state) => {
   state.formState = 'valid';
   getRssData(value)
     .then((data) => {
-      console.log(data);
+      //console.log(data);
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRss(data);
       e.target.reset();
