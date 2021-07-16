@@ -55,7 +55,7 @@ const renderPosts = (posts, ui) => {
     const linkClass = ui.visitedLinks[post.id] ? 'fw-normal' : 'fw-bold';
     const link = createElem('a', linkClass);
     link.dataset.id = post.id;
-    link.setAttribute('src', post.link);
+    link.setAttribute('href', post.link);
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');
     link.setAttribute('role', 'link');
@@ -73,6 +73,7 @@ const renderPosts = (posts, ui) => {
   card.append(listGroup);
   postsContainer.append(card);
 };
+
 const updateForm = (form, state) => {
   const input = form.querySelector('input');
   const button = form.querySelector('button');

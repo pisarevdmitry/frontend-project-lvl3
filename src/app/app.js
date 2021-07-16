@@ -6,6 +6,7 @@ import i18n from 'i18next';
 import _ from 'lodash';
 import watch from './view';
 import resources from '../locales';
+import parse from './parser';
 
 const validate = (value, state) => {
   const addedUrls = state.addedUrls.map((url) => url.link);
@@ -18,29 +19,20 @@ const validate = (value, state) => {
   }
 };
 
-const parseRss = (rss) => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(rss, 'application/xml');
-  const channel = doc.querySelector('channel');
-  if (!channel) throw new Error(i18n.t('invalidRss'));
-  const posts = Array.from(doc.querySelectorAll('item'));
-  const mapped = posts.map((post) => (
-    {
-      title: post.querySelector('title').textContent,
-      description: post.querySelector('description').textContent,
-      link: post.querySelector('link').textContent,
-      pubDate: new Date(post.querySelector('pubDate').textContent),
-      guid: post.querySelector('guid').textContent,
-    }
-  ));
-
-  return {
-    feed: {
-      title: channel.querySelector('title').textContent,
-      description: channel.querySelector('description').textContent,
-    },
-    posts: mapped,
+const parseRssData = (rss) => {
+  const data = parse(rss);
+  const items = data.items.map((item) => ({
+    title: item.title,
+    description: item.description,
+    link: item.link,
+    pubDate: new Date(item.pubDate),
+    guid: item.guid,
+  }));
+  const feed = {
+    title: data.title,
+    description: data.description,
   };
+  return { feed, posts: items };
 };
 
 const getRssData = (url) => {
@@ -66,7 +58,7 @@ const addRss = (e, state) => {
     .then((data) => {
       state.formState = 'ready';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
-      const { feed, posts } = parseRss(data);
+      const { feed, posts } = parseRssData(data);
       e.target.reset();
       const feedId = _.uniqueId();
       state.addedUrls.push({ link: value, feedId });
@@ -102,7 +94,7 @@ const updateRss = (state) => {
   Promise.all(promises).then((data) => {
     const filtered = data.filter((el) => el);
     const processed = filtered.map((el) => {
-      const parsedData = parseRss(el.data);
+      const parsedData = parseRssData(el.data);
       const newPosts = findNewPosts(state, el.feedId, parsedData.posts);
       return newPosts.map((post) => ({ ...post, feedId: el.feedId, id: _.uniqueId() }));
     });
