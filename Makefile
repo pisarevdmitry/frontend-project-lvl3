@@ -7,8 +7,4 @@ lint:
 start-dev:
 	npx webpack serve
 build: 
-	npx webpack		
-tests:
-	npm test	
-tests-coverage:	
-	npm test -- --coverage --coverageProvider=v8
+	npx webpack 
