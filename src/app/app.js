@@ -46,16 +46,12 @@ const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
   return axios.get(fetchUrl)
     .then((res) => {
-      const { data, status } = res;
+      const { data} = res;
       const { contents } = data;
-      console.log(status);
-      if (status !== 200) {
-        return Promise.reject(new Error(i18n.t('networkError')));
-      }
       return contents;
     }).catch((e) => {
       console.log(e);
-      return Promise.reject(new Error(e.message));
+      return Promise.reject(new Error(i18n.t('networkError')));
     });
 };
 
