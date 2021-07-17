@@ -56,13 +56,13 @@ const addRss = (value, state) => {
 
   getRssData(value)
     .then((data) => {
+       state.formState = 'ready';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRssData(data);
       const feedId = _.uniqueId();
       state.addedUrls.push({ link: value, feedId });
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
-      state.formState = 'ready';
       state.formMessage = { type: 'success', value: i18n.t('added') };
       const newFeeds = [feed, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
