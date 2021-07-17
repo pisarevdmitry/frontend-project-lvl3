@@ -9,7 +9,7 @@ import resources from '../locales';
 import parse from './parser';
 
 const validate = (value, state) => {
-  const addedUrls = state.addedUrls.map((url) => url.link);
+  const addedUrls = state.feeds.map((feed) => feed.fetchUrl);
   const schema = yup.string().required().url().notOneOf(addedUrls);
   try {
     schema.validateSync(value);
@@ -44,27 +44,26 @@ const getRssData = (url) => {
     }).catch(() => Promise.reject(new Error(i18n.t('networkError'))));
 };
 
-const addRss = (value, state) => {
+const addRss = (url, state) => {
   state.formState = 'processing';
-  const validationError = validate(value, state);
+  const validationError = validate(url, state);
   if (validationError) {
     state.formState = 'invalid';
     state.formMessage = { type: 'error', value: validationError };
     return;
   }
 
-  getRssData(value)
+  getRssData(url)
     .then((data) => {
       state.formState = 'processed';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRssData(data);
       const feedId = _.uniqueId();
-      state.addedUrls.push({ link: value, feedId });
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
       state.formMessage = { type: 'success', value: i18n.t('added') };
       state.formState = 'empty';
-      const newFeeds = [feed, ...state.feeds];
+      const newFeeds = [{ fetchUrl: url, feed }, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
       state.feeds = newFeeds;
       state.posts = newPosts;
@@ -81,14 +80,14 @@ const findNewPosts = (state, feedId, posts) => {
 };
 
 const updateRss = (state) => {
-  if (state.addedUrls.length === 0) {
+  if (state.feeds.length === 0) {
     setTimeout(() => {
       updateRss(state);
     }, 5000);
     return;
   }
-  const promises = state.addedUrls.map(({ link, feedId }) => (
-    getRssData(link).then((data) => ({ feedId, data })).catch(() => null)
+  const promises = state.feeds.map(({ fetchUrl, feed }) => (
+    getRssData(fetchUrl).then((data) => ({ feedId: feed.id, data })).catch(() => null)
   ));
   Promise.all(promises).then((data) => {
     const filtered = data.filter((el) => el);
@@ -128,7 +127,6 @@ const app = () => {
     const state = {
       mainLogic: {
         formMessage: null,
-        addedUrls: [],
         formState: 'ready',
         feeds: [],
         posts: [],

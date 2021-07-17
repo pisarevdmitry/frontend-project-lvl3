@@ -31,7 +31,7 @@ const renderFeeds = (feeds) => {
   feedsContainer.innerHTML = '';
   const card = createCard('Фиды');
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
-  feeds.forEach((feed) => {
+  feeds.forEach(({ feed }) => {
     const item = createElem('li', 'list-group-item', 'border-0', 'border-end-0');
     const title = createElem('h3', 'h6', 'm-0');
     const desc = createElem('p', 'm-0', 'small', 'text-black-50');
