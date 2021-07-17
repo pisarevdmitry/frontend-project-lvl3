@@ -19,9 +19,8 @@ const validate = (value, state) => {
   }
 };
 
-const parseRssData = (rss) => {
-  const data = parse(rss);
-  const items = data.items.map((item) => ({
+const normalizeRssData = (parsedData) => {
+  const items = parsedData.items.map((item) => ({
     title: item.title,
     description: item.description,
     link: item.link,
@@ -29,8 +28,8 @@ const parseRssData = (rss) => {
     guid: item.guid,
   }));
   const feed = {
-    title: data.title,
-    description: data.description,
+    title: parsedData.title,
+    description: parsedData.description,
   };
   return { feed, posts: items };
 };
@@ -57,7 +56,8 @@ const addRss = (url, state) => {
     .then((data) => {
       state.formState = 'processed';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
-      const { feed, posts } = parseRssData(data);
+      const parsedData = parse(data);
+      const { feed, posts } = normalizeRssData(parsedData);
       const feedId = _.uniqueId();
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
@@ -86,17 +86,19 @@ const updateRss = (state) => {
     }, 5000);
     return;
   }
+
   const promises = state.feeds.map(({ fetchUrl, feed }) => (
-    getRssData(fetchUrl).then((data) => ({ feedId: feed.id, data })).catch(() => null)
+    getRssData(fetchUrl).then((data) => {
+      const parsedData = parse(data);
+      const { posts } = normalizeRssData(parsedData);
+      const newPosts = findNewPosts(state, feed.id, posts);
+      return newPosts.map((post) => ({ ...post, feedId: feed.id, id: _.uniqueId() }));
+    }).catch(() => null)
   ));
+
   Promise.all(promises).then((data) => {
-    const filtered = data.filter((el) => el);
-    const processed = filtered.map((el) => {
-      const parsedData = parseRssData(el.data);
-      const newPosts = findNewPosts(state, el.feedId, parsedData.posts);
-      return newPosts.map((post) => ({ ...post, feedId: el.feedId, id: _.uniqueId() }));
-    });
-    const createdPosts = processed.flat();
+    const filtered = data.filter((el) => el !== null);
+    const createdPosts = filtered.flat();
     if (createdPosts.length !== 0) {
       state.posts = [...state.posts, ...createdPosts];
     }
