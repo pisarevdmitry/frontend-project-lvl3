@@ -62,7 +62,7 @@ const addRss = (url, state) => {
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
       state.formMessage = { type: 'success', value: i18n.t('added') };
-      state.formState = 'empty';
+      state.formState = 'clear';
       const newFeeds = [{ fetchUrl: url, feed }, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
       state.feeds = newFeeds;
@@ -129,7 +129,7 @@ const app = () => {
     const state = {
       mainLogic: {
         formMessage: null,
-        formState: 'ready',
+        formState: 'clear',
         feeds: [],
         posts: [],
       },

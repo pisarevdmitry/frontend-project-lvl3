@@ -84,7 +84,7 @@ const updateForm = (form, state) => {
       input.classList.remove('is-invalid');
       break;
     }
-    case 'empty': {
+    case 'clear': {
       form.reset();
       break;
     }
