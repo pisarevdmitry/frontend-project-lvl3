@@ -6,5 +6,5 @@
 # RSS reader
 ### application for reading RSS feeds
 
-the application has been deployed on Versel
+the application has been deployed on Versel  
 deployment link:  https://frontend-project-lvl3-peach-sigma.vercel.app/
