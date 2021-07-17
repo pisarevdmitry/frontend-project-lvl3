@@ -78,14 +78,17 @@ const updateForm = (form, state) => {
   const input = form.querySelector('input');
   const button = form.querySelector('button');
   switch (state) {
-    case 'ready': {
+    case 'processed': {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
       input.classList.remove('is-invalid');
+      break;
+    }
+    case 'empty': {
       form.reset();
       break;
     }
-    case 'processed': {
+    case 'processing': {
       button.setAttribute('disabled', null);
       input.setAttribute('readonly', null);
       break;

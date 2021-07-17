@@ -21,7 +21,6 @@ const validate = (value, state) => {
 
 const parseRssData = (rss) => {
   const data = parse(rss);
-  console.log(data);
   const items = data.items.map((item) => ({
     title: item.title,
     description: item.description,
@@ -46,7 +45,7 @@ const getRssData = (url) => {
 };
 
 const addRss = (value, state) => {
-  state.formState = 'processed';
+  state.formState = 'processing';
   const validationError = validate(value, state);
   if (validationError) {
     state.formState = 'invalid';
@@ -56,7 +55,7 @@ const addRss = (value, state) => {
 
   getRssData(value)
     .then((data) => {
-       state.formState = 'ready';
+      state.formState = 'processed';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRssData(data);
       const feedId = _.uniqueId();
@@ -64,6 +63,7 @@ const addRss = (value, state) => {
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
       state.formMessage = { type: 'success', value: i18n.t('added') };
+      state.formState = 'empty';
       const newFeeds = [feed, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
       state.feeds = newFeeds;
