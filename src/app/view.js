@@ -52,7 +52,7 @@ const renderPosts = (posts, ui) => {
   const sorted = _.orderBy(posts, 'pubDate', 'desc');
   sorted.forEach((post) => {
     const item = createElem('li', 'list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-    const linkClass = ui.visitedLinks[post.id] ? 'fw-normal' : 'fw-bold';
+    const linkClass = ui.viewedPosts[post.id] ? 'fw-normal' : 'fw-bold';
     const link = createElem('a', linkClass);
     link.dataset.id = post.id;
     link.setAttribute('href', post.link);
@@ -82,6 +82,7 @@ const updateForm = (form, state) => {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
       input.classList.remove('is-invalid');
+      form.reset();
       break;
     }
     case 'processed': {
@@ -100,12 +101,11 @@ const updateForm = (form, state) => {
   }
 };
 
-const renderModal = (e, state, uiState) => {
+const renderModal = (e, state) => {
   const title = e.target.querySelector('.modal-title');
   const body = e.target.querySelector('.modal-body');
   const link = e.target.querySelector('.full-article');
   const { id } = e.relatedTarget.dataset;
-  uiState.visitedLinks[id] = id;
   const post = _.find(state.posts, (el) => el.id === id);
   title.textContent = post.title;
   body.textContent = post.description;
@@ -118,19 +118,23 @@ const updatePostHeader = (id) => {
   header.classList.add('fw-normal');
 };
 
-const watch = (state) => {
+const handleSubmit = (e, state, controllerHandler) => {
+  e.preventDefault();
+  const { value } = e.target.querySelector('input');
+  controllerHandler(value, state);
+};
+
+const watch = (state, handlers) => {
   const form = document.querySelector('form');
   const formFeedback = document.querySelector('.feedback');
   const modal = document.querySelector('#modal');
-  const ui = {
-    visitedLinks: {},
-  };
-  const watchedUi = onChange(ui, (path, value) => {
-    if (path.includes('visitedLinks')) {
+  const postsContainer = document.querySelector('.posts');
+  const watchedUi = onChange(state.ui, (path, value) => {
+    if (path.includes('viewedPosts')) {
       updatePostHeader(value);
     }
   });
-  const watched = onChange(state, (path, value) => {
+  const watchedMain = onChange(state.mainLogic, (path, value) => {
     switch (path) {
       case 'formMessage': {
         renderFeedback(formFeedback, value);
@@ -152,8 +156,19 @@ const watch = (state) => {
         break;
     }
   });
-  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watched, watchedUi));
-  return watched;
+  form.addEventListener('submit', (e) => handleSubmit(e, watchedMain, handlers.addRss));
+  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watchedMain, watchedUi));
+  postsContainer.addEventListener('click', (e) => {
+    const tagName = e.target.tagName.toLowerCase();
+    if (tagName === 'button' || tagName === 'a') {
+      const { id } = e.target.dataset;
+      handlers.setViewed(watchedUi, id);
+    }
+  });
+
+  setTimeout(() => {
+    handlers.updateRss(watchedMain);
+  }, 5000);
 };
 
 export default watch;

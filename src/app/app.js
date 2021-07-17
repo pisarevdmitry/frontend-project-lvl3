@@ -21,6 +21,7 @@ const validate = (value, state) => {
 
 const parseRssData = (rss) => {
   const data = parse(rss);
+  console.log(data);
   const items = data.items.map((item) => ({
     title: item.title,
     description: item.description,
@@ -44,26 +45,24 @@ const getRssData = (url) => {
     }).catch(() => Promise.reject(new Error(i18n.t('networkError'))));
 };
 
-const addRss = (e, state) => {
-  e.preventDefault();
+const addRss = (value, state) => {
   state.formState = 'processed';
-  const { value } = e.target.querySelector('input');
   const validationError = validate(value, state);
   if (validationError) {
     state.formState = 'invalid';
     state.formMessage = { type: 'error', value: validationError };
     return;
   }
+
   getRssData(value)
     .then((data) => {
-      state.formState = 'ready';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { feed, posts } = parseRssData(data);
-      e.target.reset();
       const feedId = _.uniqueId();
       state.addedUrls.push({ link: value, feedId });
       feed.id = feedId;
       const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
+      state.formState = 'ready';
       state.formMessage = { type: 'success', value: i18n.t('added') };
       const newFeeds = [feed, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
@@ -108,6 +107,10 @@ const updateRss = (state) => {
   });
 };
 
+const setViewed = (uiState, id) => {
+  uiState.viewedPosts[id] = id;
+};
+
 const app = () => {
   i18n.init({
     lng: 'ru',
@@ -122,19 +125,24 @@ const app = () => {
         url: i18n.t('validate.url'),
       },
     });
-    const form = document.querySelector('form');
     const state = {
-      formMessage: null,
-      addedUrls: [],
-      formState: 'ready',
-      feeds: [],
-      posts: [],
+      mainLogic: {
+        formMessage: null,
+        addedUrls: [],
+        formState: 'ready',
+        feeds: [],
+        posts: [],
+      },
+      ui: {
+        viewedPosts: {},
+      },
     };
-    const watched = watch(state);
-    form.addEventListener('submit', (e) => addRss(e, watched));
-    setTimeout(() => {
-      updateRss(watched);
-    }, 5000);
+    const handlers = {
+      addRss,
+      setViewed,
+      updateRss,
+    };
+    watch(state, handlers);
   });
 };
 
