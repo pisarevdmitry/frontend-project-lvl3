@@ -64,6 +64,7 @@ const renderPosts = (posts, ui) => {
     const button = createElem('button', 'btn', 'btn-outline-primary', 'btn-sm');
     button.setAttribute('type', 'button');
     button.dataset.id = post.id;
+    button.dataset.testid = post.id;
     button.dataset.bsToggle = 'modal';
     button.dataset.bsTarget = '#modal';
     button.textContent = 'Просмотр';
