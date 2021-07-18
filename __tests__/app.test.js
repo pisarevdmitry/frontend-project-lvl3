@@ -12,7 +12,7 @@ import nock from 'nock';
 import path from 'path';
 import process from 'process';
 import fs from 'fs';
-import { getByText, screen } from '@testing-library/dom';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import app from '../src/app/app';
 
@@ -115,8 +115,10 @@ test('modal', async () => {
   const buttonView = screen.getByTestId(id);
   userEvent.click(buttonView);
   const modal = await screen.findByRole('dialog');
-  getByText(modal, /Kubernetes \/ DevOps: Деплой и эксплуатация/i);
-  getByText(modal, /Цель: Познакомиться с Kubernetes/i);
   expect(modal).toBeVisible();
   expect(link).toHaveClass('fw-normal');
+  const header = screen.getByRole('modal-title');
+  const body = screen.getByRole('modal-body');
+  expect(header.textContent.trim()).toBe('Kubernetes / DevOps: Деплой и эксплуатация');
+  expect(body.textContent.trim()).toBe('Цель: Познакомиться с Kubernetes');
 });
