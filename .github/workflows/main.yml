@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: linting
+name: jest-tests
 
 # Controls when the action will run. 
 on:
@@ -17,16 +17,29 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
+      - name: npm install
+        # Install project
         run: |
-          npm install
+          make install
+        # Add environment variables
+        env:
+          CI: true
+      - name: Run linter
+        # Run Linter
+        run: |
           make lint
+      - name: Test & publish code coverage
+        # Publish code coverage on Code Climate
+        # https://github.com/paambaati/codeclimate-action
+        uses: paambaati/codeclimate-action@v2.7.4
+        # Add Code Climate secret key
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CODECLIMATE_KEY }}
+        with:
+          coverageCommand: make tests-coverage
+          debug: true   
 
-      # Runs a set of commands using the runners shell
