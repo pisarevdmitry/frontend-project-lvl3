@@ -44,6 +44,7 @@ const renderFeeds = (feeds) => {
   card.append(listGroup);
   feedsContainer.append(card);
 };
+
 const renderPosts = (posts, ui) => {
   const postsContainer = document.querySelector('.posts');
   postsContainer.innerHTML = '';
@@ -137,6 +138,7 @@ const watch = (state, handlers) => {
       updatePostHeader(value);
     }
   });
+
   const watchedMain = onChange(state.mainLogic, (path, value) => {
     switch (path) {
       case 'formMessage': {
@@ -160,7 +162,7 @@ const watch = (state, handlers) => {
     }
   });
   form.addEventListener('submit', (e) => handleSubmit(e, watchedMain, handlers.addRss));
-  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watchedMain, watchedUi));
+  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watchedMain));
   postsContainer.addEventListener('click', (e) => {
     const tagName = e.target.tagName.toLowerCase();
     if (tagName === 'button' || tagName === 'a') {
