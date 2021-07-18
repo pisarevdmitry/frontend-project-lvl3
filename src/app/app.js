@@ -9,7 +9,7 @@ import parse from './parser';
 
 const validate = (value, state) => {
   const addedUrls = state.feeds.map((feed) => feed.fetchUrl);
-  const schema = yup.string().required().url().notOneOf(addedUrls);
+  const schema = yup.string().min(1).url().notOneOf(addedUrls);
   try {
     schema.validateSync(value);
     return null;
@@ -44,7 +44,7 @@ const getRssData = (url) => {
 
 const addRss = (url, state) => {
   state.formState = 'processing';
-  const validationError = validate(url, state);
+  const validationError = validate(url.trim(), state);
   if (validationError) {
     state.formState = 'invalid';
     state.formMessage = { type: 'error', value: validationError };
@@ -121,7 +121,7 @@ const app = () => {
         notOneOf: i18n.t('validate.exists'),
       },
       string: {
-        required: i18n.t('validate.required'),
+        min: i18n.t('validate.required'),
         url: i18n.t('validate.url'),
       },
     });
