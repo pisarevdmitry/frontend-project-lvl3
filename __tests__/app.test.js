@@ -88,6 +88,7 @@ test('update Rss', async () => {
   }, 1500);
   await screen.findByText(/Storybooks \/ Фронтенд: Браузер и JSDOM/i, {}, { timeout: 5000 });
 });
+
 test('modal', async () => {
   userEvent.type(input, 'https://ru.hexlet.io/lessons.rss');
   userEvent.click(button);
