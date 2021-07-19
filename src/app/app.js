@@ -72,8 +72,7 @@ const addRss = (url, state) => {
     });
 };
 
-const findNewPosts = (state, feedId, posts) => {
-  const existedPosts = state.posts.filter((post) => post.feedId === feedId);
+const findNewPosts = (existedPosts, posts) => {
   const keyed = (_.keyBy(existedPosts, 'guid'));
   return posts.filter((post) => !keyed[post.guid]);
 };
@@ -90,7 +89,8 @@ const updateRss = (state) => {
     getRssData(fetchUrl).then((data) => {
       const parsedData = parse(data);
       const { posts } = normalizeRssData(parsedData);
-      const newPosts = findNewPosts(state, feed.id, posts);
+      const existingPosts = state.posts.filter((post) => post.feedId === feed.id);
+      const newPosts = findNewPosts(existingPosts, posts);
       return newPosts.map((post) => ({ ...post, feedId: feed.id, id: _.uniqueId() }));
     }).catch(() => null)
   ));
