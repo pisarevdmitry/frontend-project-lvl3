@@ -134,11 +134,8 @@ const watch = (state, handlers) => {
   const formFeedback = document.querySelector('.feedback');
   const modal = document.querySelector('#modal');
   const postsContainer = document.querySelector('.posts');
-  const watchedUi = onChange(state.ui, (path, value) => {
-    if (path.includes('viewedPosts')) {
-      updatePostHeader(value);
-    }
-  });
+
+  const watchedUi = onChange(state.ui, (_path, value) => updatePostHeader(value));
 
   const watchedMain = onChange(state.mainLogic, (path, value) => {
     switch (path) {
