@@ -99,8 +99,9 @@ test('update Rss', async () => {
   setTimeout(async () => {
     mock(200, { contents: updatedRss });
   }, 1500);
-  const newPost = await screen.findByText(/Storybooks \/ Фронтенд: Браузер и JSDOM/i, {}, { timeout: 5000 });
-  expect(newPost).toHaveClass('fw-bold');
+  await screen.findByText(/Storybooks \/ Фронтенд: Браузер и JSDOM/i, {}, { timeout: 5000 });
+  const posts = screen.getAllByRole('link');
+  expect(posts.length).toBe(3);
 });
 
 test('modal', async () => {
