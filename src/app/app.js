@@ -7,8 +7,7 @@ import watch from './view';
 import resources from '../locales';
 import parse from './parser';
 
-const validate = (value, state) => {
-  const addedUrls = state.feeds.map((feed) => feed.fetchUrl);
+const validate = (value, addedUrls) => {
   const schema = yup.string().min(1).url().notOneOf(addedUrls);
   try {
     schema.validateSync(value);
@@ -44,7 +43,8 @@ const getRssData = (url) => {
 
 const addRss = (url, state) => {
   state.formState = 'processing';
-  const validationError = validate(url.trim(), state);
+  const addedUrls = state.feeds.map((feed) => feed.fetchUrl);
+  const validationError = validate(url.trim(), addedUrls);
   if (validationError) {
     state.formState = 'invalid';
     state.formMessage = { type: 'error', value: validationError };
