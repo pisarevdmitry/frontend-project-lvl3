@@ -45,9 +45,8 @@ const renderFeeds = (feeds) => {
   feedsContainer.append(card);
 };
 
-const renderPosts = (posts, ui) => {
-  const postsContainer = document.querySelector('.posts');
-  postsContainer.innerHTML = '';
+const renderPosts = (container, posts, ui) => {
+  container.innerHTML = '';
   const card = createCard('Посты');
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   const sorted = _.orderBy(posts, 'pubDate', 'desc');
@@ -73,7 +72,7 @@ const renderPosts = (posts, ui) => {
     listGroup.append(item);
   });
   card.append(listGroup);
-  postsContainer.append(card);
+  container.append(card);
 };
 
 const updateForm = (form, state) => {
@@ -134,7 +133,6 @@ const watch = (state, handlers) => {
   const formFeedback = document.querySelector('.feedback');
   const modal = document.querySelector('#modal');
   const postsContainer = document.querySelector('.posts');
-
   const watchedUi = onChange(state.ui, (_path, value) => updatePostHeader(value));
 
   const watchedMain = onChange(state.mainLogic, (path, value) => {
@@ -152,7 +150,7 @@ const watch = (state, handlers) => {
         break;
       }
       case 'posts': {
-        renderPosts(value, watchedUi);
+        renderPosts(postsContainer, value, watchedUi);
         break;
       }
       default:
