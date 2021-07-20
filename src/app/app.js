@@ -34,7 +34,6 @@ const normalizeRssData = (parsedData) => {
 
 const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
-  console.log(url);
   return axios.get(fetchUrl)
     .then((res) => {
       const { data: { contents } } = res;
