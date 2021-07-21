@@ -26,9 +26,8 @@ const renderFeedback = (feedbackContainer, { type, value }) => {
   feedbackContainer.textContent = value;
 };
 
-const renderFeeds = (feeds) => {
-  const feedsContainer = document.querySelector('.feeds');
-  feedsContainer.innerHTML = '';
+const renderFeeds = (container, feeds) => {
+  container.innerHTML = '';
   const card = createCard('Фиды');
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   feeds.forEach(({ feed }) => {
@@ -42,7 +41,7 @@ const renderFeeds = (feeds) => {
     listGroup.append(item);
   });
   card.append(listGroup);
-  feedsContainer.append(card);
+  container.append(card);
 };
 
 const renderPosts = (container, posts, ui) => {
@@ -133,6 +132,7 @@ const watch = (state, handlers) => {
   const formFeedback = document.querySelector('.feedback');
   const modal = document.querySelector('#modal');
   const postsContainer = document.querySelector('.posts');
+  const feedsContainer = document.querySelector('.feeds');
   const watchedUi = onChange(state.ui, (_path, value) => updatePostHeader(value));
 
   const watchedMain = onChange(state.mainLogic, (path, value) => {
@@ -146,7 +146,7 @@ const watch = (state, handlers) => {
         break;
       }
       case 'feeds': {
-        renderFeeds(value);
+        renderFeeds(feedsContainer, value);
         break;
       }
       case 'posts': {
