@@ -76,7 +76,7 @@ describe('validation', () => {
   });
 });
 test('load Rss', async () => {
-  const url = 'https://ru.hexlet.io/less.rss';
+  const url = 'https://ru.hexlet.io/valid2.rss';
   submitUrl(url);
   mock(url, 200, { contents: validRss });
   const msg = await screen.findByText(/RSS успешно загружен/i);
@@ -87,7 +87,7 @@ test('load Rss', async () => {
 });
 
 test('update Rss', async () => {
-  const url = 'https://ru.hexlet.io/lessons.rss';
+  const url = 'https://ru.hexlet.io/valid3.rss';
   const updatedRss = fs.readFileSync(getFixturePath('updatedRss.xml')).toString();
   submitUrl(url);
   const scope = mock(url, 200, { contents: validRss });
@@ -101,7 +101,7 @@ test('update Rss', async () => {
 });
 
 test('modal', async () => {
-  const url = 'https://ru.hexlet.io/valid3.rss';
+  const url = 'https://ru.hexlet.io/valid4.rss';
   submitUrl(url);
   mock(url, 200, { contents: validRss });
   const link = await screen.findByText(/Kubernetes \/ DevOps: Деплой и эксплуатация/i);
