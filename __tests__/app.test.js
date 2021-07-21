@@ -48,12 +48,12 @@ describe('validation', () => {
   test('invalid url', async () => {
     submitUrl('wrong');
     const input = screen.getByLabelText('Ссылка RSS');
-    await screen.findByText('Ссылка должна быть валидным URL');
+    await screen.findByText(/Ссылка должна быть валидным URL/i);
     expect(input).toHaveClass('is-invalid');
   });
   test('empty', async () => {
     submitUrl(' ');
-    const msg = await screen.findByText('Не должно быть пустым');
+    const msg = await screen.findByText(/Не должно быть пустым/i);
     expect(msg).toHaveClass('text-danger');
   });
   test('invalid Rss', async () => {
@@ -61,7 +61,7 @@ describe('validation', () => {
     const invalidRss = fs.readFileSync(getFixturePath('invalidRss.html')).toString();
     mock(url, 200, { contents: invalidRss });
     submitUrl(url);
-    const msg = await screen.findByText('Ресурс не содержит валидный RSS');
+    const msg = await screen.findByText(/Ресурс не содержит валидный RSS/i);
     expect(msg).toHaveClass('text-danger');
   });
 
@@ -71,7 +71,7 @@ describe('validation', () => {
     mock(url, 200, { contents: validRss });
     await screen.findByText(/RSS успешно загружен/i);
     submitUrl(url);
-    const msg = await screen.findByText('Rss уже существует');
+    const msg = await screen.findByText(/Rss уже существует/i);
     expect(msg).toHaveClass('text-danger');
   });
 });
@@ -79,11 +79,11 @@ test('load Rss', async () => {
   const url = 'https://ru.hexlet.io/valid2.rss';
   submitUrl(url);
   mock(url, 200, { contents: validRss });
-  const msg = await screen.findByText(/RSS успешно загружен/i);
+  await screen.findByText(/RSS успешно загружен/i);
   await screen.findByText(/Новые уроки на Хекслете/);
-  await screen.findByText(/Kubernetes \/ DevOps: Деплой и эксплуатация/i);
   await screen.findByText(/Errors-handling \/ DevOps: Деплой и эксплуатация/i);
-  expect(msg).toHaveClass('text-success');
+  const posts = screen.getAllByRole('link');
+  expect(posts.length).toBe(2);
 });
 
 test('update Rss', async () => {
