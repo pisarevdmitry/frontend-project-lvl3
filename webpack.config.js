@@ -2,19 +2,13 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const rules = require('./webpackRules');
 
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
-  entry: './src/index.js',
+  entry: path.resolve(__dirname, 'src/index.js'),
   output: {
     path: path.resolve(__dirname, 'public'),
     filename: 'bundle.js',
-  },
-  optimization: {
-    minimize: true,
-    minimizer: [new TerserPlugin()],
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -26,7 +20,21 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
   ],
-  module: { rules },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+        },
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+    ],
+  },
   devServer: {
     contentBase: path.join(__dirname, 'public'),
     compress: true,

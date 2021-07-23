@@ -1,29 +1,29 @@
-import i18n from 'i18next';
-
-const parseItem = (item) => (
-  Array.from(item.children).reduce((acc, child) => {
-    const name = child.tagName;
-    acc[name] = child.textContent;
-    return acc;
-  }, {})
-);
+const parseItem = (item) => ({
+  title: item.querySelector('title').textContent,
+  description: item.querySelector('description').textContent,
+  link: item.querySelector('link').textContent,
+  pubDate: new Date(item.querySelector('pubDate').textContent),
+  guid: item.querySelector('guid').textContent,
+});
 
 const parseRss = (rss) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rss, 'application/xml');
-  const channel = doc.querySelector('channel');
-  if (!channel) throw new Error(i18n.t('invalidRss'));
-  const result = Array.from(channel.children).reduce((acc, child) => {
-    const name = child.tagName;
-    if (name === 'item') {
-      const item = parseItem(child);
-      acc.items = acc.items ? [...acc.items, item] : [item];
-    } else {
-      acc[name] = child.textContent;
-    }
-    return acc;
-  }, {});
-  return result;
+  const error = doc.querySelector('parsererror');
+  if (error) {
+    const parsingError = new Error(error.textContent);
+    parsingError.isParsingError = true;
+    throw parsingError;
+  }
+  const channelTitle = doc.querySelector('channel > title').textContent;
+  const channelDescription = doc.querySelector('channel > description').textContent;
+  const channelItems = doc.querySelectorAll('channel > item');
+  const parsedItems = Array.from(channelItems).map(parseItem);
+  return {
+    title: channelTitle,
+    description: channelDescription,
+    items: parsedItems,
+  };
 };
 
 export default parseRss;

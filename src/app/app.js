@@ -17,28 +17,13 @@ const validate = (value, addedUrls) => {
   }
 };
 
-const normalizeRssData = (parsedData) => {
-  const items = parsedData.items.map((item) => ({
-    title: item.title,
-    description: item.description,
-    link: item.link,
-    pubDate: new Date(item.pubDate),
-    guid: item.guid,
-  }));
-  const feed = {
-    title: parsedData.title,
-    description: parsedData.description,
-  };
-  return { feed, posts: items };
-};
-
 const getRssData = (url) => {
   const fetchUrl = `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
   return axios.get(fetchUrl)
     .then((res) => {
       const { data: { contents } } = res;
       return contents;
-    }).catch(() => Promise.reject(new Error(i18n.t('networkError'))));
+    });
 };
 
 const addRss = (url, state) => {
@@ -55,19 +40,25 @@ const addRss = (url, state) => {
     .then((data) => {
       state.formState = 'processed';
       if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
-      const parsedData = parse(data);
-      const { feed, posts } = normalizeRssData(parsedData);
-      const feedId = _.uniqueId();
-      feed.id = feedId;
-      const createdPosts = posts.map((elem) => ({ ...elem, feedId, id: _.uniqueId() }));
+      const { title, description, items: posts } = parse(data);
+      const newFeed = { title, description, id: _.uniqueId() };
+      const createdPosts = posts.map((elem) => ({ ...elem, feedId: newFeed.id, id: _.uniqueId() }));
       state.formMessage = { type: 'success', value: i18n.t('added') };
       state.formState = 'clear';
-      const newFeeds = [{ fetchUrl: url, feed }, ...state.feeds];
+      const newFeeds = [{ fetchUrl: url, feed: newFeed }, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
       state.feeds = newFeeds;
       state.posts = newPosts;
     })
     .catch((error) => {
+      if (axios.isAxiosError(error)) {
+        state.formMessage = { type: 'error', value: i18n.t('networkError') };
+        return;
+      }
+      if (error.isParsingError) {
+        state.formMessage = { type: 'error', value: i18n.t('invalidRss') };
+        return;
+      }
       state.formMessage = { type: 'error', value: error.message };
     });
 };
@@ -87,8 +78,7 @@ const updateRss = (state) => {
 
   const promises = state.feeds.map(({ fetchUrl, feed }) => (
     getRssData(fetchUrl).then((data) => {
-      const parsedData = parse(data);
-      const { posts } = normalizeRssData(parsedData);
+      const { items: posts } = parse(data);
       const existingPosts = state.posts.filter((post) => post.feedId === feed.id);
       const newPosts = findNewPosts(existingPosts, posts);
       return newPosts.map((post) => ({ ...post, feedId: feed.id, id: _.uniqueId() }));

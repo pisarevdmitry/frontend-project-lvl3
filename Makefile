@@ -7,7 +7,7 @@ lint:
 start-dev:
 	npx webpack serve
 build: 
-	npx webpack
+	NODE_ENV=production npx webpack
 tests:
 	npm test	
 tests-coverage:	
