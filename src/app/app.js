@@ -4,7 +4,7 @@ import * as yup from 'yup';
 import i18n from 'i18next';
 import _ from 'lodash';
 import watch from './view';
-import resources from '../locales';
+import { ru, en, yup as yupLocale } from '../locales';
 import parse from './parser';
 
 const validate = (value, addedUrls) => {
@@ -32,14 +32,13 @@ const addRss = (url, state) => {
   const validationError = validate(url.trim(), addedUrls);
   if (validationError) {
     state.formState = 'invalid';
-    state.formMessage = { type: 'error', value: validationError };
+    state.formMessage = { type: 'error', value: i18n.t(validationError) };
     return;
   }
 
   getRssData(url)
     .then((data) => {
       state.formState = 'processed';
-      if (!data) Promise.reject(new Error(i18n.t('invalidRss')));
       const { title, description, items: posts } = parse(data);
       const newFeed = { title, description, id: _.uniqueId() };
       const createdPosts = posts.map((elem) => ({ ...elem, feedId: newFeed.id, id: _.uniqueId() }));
@@ -52,14 +51,14 @@ const addRss = (url, state) => {
     })
     .catch((error) => {
       if (axios.isAxiosError(error)) {
-        state.formMessage = { type: 'error', value: i18n.t('networkError') };
+        state.formMessage = { type: 'error', value: i18n.t('errors.networkError') };
         return;
       }
-      if (error.isParsingError) {
-        state.formMessage = { type: 'error', value: i18n.t('invalidRss') };
+      if (_.has(error, 'isParsingError')) {
+        state.formMessage = { type: 'error', value: i18n.t('errors.invalidRss') };
         return;
       }
-      state.formMessage = { type: 'error', value: error.message };
+      state.formMessage = { type: 'error', value: i18n.t('errors.unknowError') };
     });
 };
 
@@ -104,17 +103,9 @@ const setViewed = (uiState, id) => {
 const app = () => {
   i18n.init({
     lng: 'ru',
-    resources,
+    resources: { ru, en },
   }).then(() => {
-    yup.setLocale({
-      mixed: {
-        notOneOf: i18n.t('validate.exists'),
-      },
-      string: {
-        min: i18n.t('validate.required'),
-        url: i18n.t('validate.url'),
-      },
-    });
+    yup.setLocale(yupLocale);
     const state = {
       mainLogic: {
         formMessage: null,

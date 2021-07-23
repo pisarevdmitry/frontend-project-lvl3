@@ -1,5 +1,6 @@
 import onChange from 'on-change';
 import _ from 'lodash';
+import i18n from 'i18next';
 
 const createElem = (elemName, ...classes) => {
   const elem = document.createElement(elemName);
@@ -28,7 +29,7 @@ const renderFeedback = (feedbackContainer, { type, value }) => {
 
 const renderFeeds = (container, feeds) => {
   container.innerHTML = '';
-  const card = createCard('Фиды');
+  const card = createCard(i18n.t('feeds'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   feeds.forEach(({ feed }) => {
     const item = createElem('li', 'list-group-item', 'border-0', 'border-end-0');
@@ -46,7 +47,7 @@ const renderFeeds = (container, feeds) => {
 
 const renderPosts = (container, posts, ui) => {
   container.innerHTML = '';
-  const card = createCard('Посты');
+  const card = createCard(i18n.t('posts'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   const sorted = _.orderBy(posts, 'pubDate', 'desc');
   sorted.forEach((post) => {
@@ -65,7 +66,7 @@ const renderPosts = (container, posts, ui) => {
     button.dataset.testid = post.id;
     button.dataset.bsToggle = 'modal';
     button.dataset.bsTarget = '#modal';
-    button.textContent = 'Просмотр';
+    button.textContent = i18n.t('view');
     item.append(link);
     item.append(button);
     listGroup.append(item);
