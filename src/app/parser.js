@@ -1,10 +1,17 @@
-const parseItem = (item) => ({
-  title: item.querySelector('title').textContent,
-  description: item.querySelector('description').textContent,
-  link: item.querySelector('link').textContent,
-  pubDate: new Date(item.querySelector('pubDate').textContent),
-  guid: item.querySelector('guid').textContent,
-});
+const parseItem = (item) => {
+  const itemTitle = item.querySelector('title');
+  const itemDescription = item.querySelector('description');
+  const itemLink = item.querySelector('link');
+  const itemPubDate = item.querySelector('pubDate');
+  const itemGuid = item.querySelector('guid');
+  return {
+    title: itemTitle.textContent,
+    description: itemDescription.textContent,
+    link: itemLink.textContent,
+    pubDate: new Date(itemPubDate.textContent),
+    guid: itemGuid.textContent,
+  };
+};
 
 const parseRss = (rss) => {
   const parser = new DOMParser();
@@ -15,13 +22,13 @@ const parseRss = (rss) => {
     parsingError.isParsingError = true;
     throw parsingError;
   }
-  const channelTitle = doc.querySelector('channel > title').textContent;
-  const channelDescription = doc.querySelector('channel > description').textContent;
+  const channelTitle = doc.querySelector('channel > title');
+  const channelDescription = doc.querySelector('channel > description');
   const channelItems = doc.querySelectorAll('channel > item');
   const parsedItems = Array.from(channelItems).map(parseItem);
   return {
-    title: channelTitle,
-    description: channelDescription,
+    title: channelTitle.textContent,
+    description: channelDescription.textContent,
     items: parsedItems,
   };
 };

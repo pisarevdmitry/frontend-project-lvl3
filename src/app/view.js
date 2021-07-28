@@ -1,6 +1,5 @@
 import onChange from 'on-change';
 import _ from 'lodash';
-import i18n from 'i18next';
 
 const createElem = (elemName, ...classes) => {
   const elem = document.createElement(elemName);
@@ -16,19 +15,19 @@ const createCard = (content) => {
   return card;
 };
 
-const renderFeedback = (feedbackContainer, { type, value }) => {
+const renderFeedback = ({ formFeedback }, type, value) => {
   if (type === 'error') {
-    feedbackContainer.classList.remove('text-success');
-    feedbackContainer.classList.add('text-danger');
+    formFeedback.classList.remove('text-success');
+    formFeedback.classList.add('text-danger');
   } else {
-    feedbackContainer.classList.remove('text-danger');
-    feedbackContainer.classList.add('text-success');
+    formFeedback.classList.remove('text-danger');
+    formFeedback.classList.add('text-success');
   }
-  feedbackContainer.textContent = value;
+  formFeedback.textContent = value;
 };
 
-const renderFeeds = (container, feeds) => {
-  container.innerHTML = '';
+const renderFeeds = ({ feedsContainer }, feeds, i18n) => {
+  feedsContainer.innerHTML = '';
   const card = createCard(i18n.t('feeds'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   feeds.forEach(({ feed }) => {
@@ -42,17 +41,17 @@ const renderFeeds = (container, feeds) => {
     listGroup.append(item);
   });
   card.append(listGroup);
-  container.append(card);
+  feedsContainer.append(card);
 };
 
-const renderPosts = (container, posts, ui) => {
-  container.innerHTML = '';
+const renderPosts = ({ postsContainer }, posts, viewedPosts, i18n) => {
+  postsContainer.innerHTML = '';
   const card = createCard(i18n.t('posts'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
   const sorted = _.orderBy(posts, 'pubDate', 'desc');
   sorted.forEach((post) => {
     const item = createElem('li', 'list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-    const linkClass = ui.viewedPosts[post.id] ? 'fw-normal' : 'fw-bold';
+    const linkClass = viewedPosts.has(post.id) ? 'fw-normal' : 'fw-bold';
     const link = createElem('a', linkClass);
     link.dataset.id = post.id;
     link.setAttribute('href', post.link);
@@ -72,24 +71,12 @@ const renderPosts = (container, posts, ui) => {
     listGroup.append(item);
   });
   card.append(listGroup);
-  container.append(card);
+  postsContainer.append(card);
 };
 
-const updateForm = (form, state) => {
-  const input = form.querySelector('input');
-  const button = form.querySelector('button');
+const handleFormStatus = ({ formInput: input, formButton: button }, state) => {
   switch (state) {
-    case 'processed': {
-      button.removeAttribute('disabled');
-      input.removeAttribute('readonly');
-      input.classList.remove('is-invalid');
-      break;
-    }
-    case 'clear': {
-      form.reset();
-      break;
-    }
-    case 'processing': {
+    case 'validating': {
       button.setAttribute('disabled', null);
       input.setAttribute('readonly', null);
       break;
@@ -100,77 +87,99 @@ const updateForm = (form, state) => {
       input.classList.add('is-invalid');
       break;
     }
+    case 'valid': {
+      button.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      input.classList.remove('is-invalid');
+      break;
+    }
     default:
       throw new Error('unknow state');
   }
 };
 
-const renderModal = (e, state) => {
-  const title = e.target.querySelector('.modal-title');
-  const body = e.target.querySelector('.modal-body');
-  const link = e.target.querySelector('.full-article');
-  const { id } = e.relatedTarget.dataset;
-  const post = _.find(state.posts, (el) => el.id === id);
-  title.textContent = post.title;
-  body.textContent = post.description;
-  link.setAttribute('href', post.link);
+const handleLoadingStatus = ({ form, formInput: input, formButton: button }, state) => {
+  switch (state) {
+    case 'loading': {
+      button.setAttribute('disabled', null);
+      input.setAttribute('readonly', null);
+      break;
+    }
+    case 'failure': {
+      button.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      break;
+    }
+    case 'success': {
+      button.removeAttribute('disabled');
+      input.removeAttribute('readonly');
+      form.reset();
+      break;
+    }
+    default:
+      throw new Error('unknow state');
+  }
 };
 
-const updatePostHeader = (id) => {
-  const header = document.querySelector(`a[data-id="${id}"]`);
-  header.classList.remove('fw-bold');
-  header.classList.add('fw-normal');
+const renderModal = ({ modalTitle, modalBody, modalLink }, id, posts) => {
+  if (!id) return;
+  const post = _.find(posts, (el) => el.id === id);
+  modalTitle.textContent = post.title;
+  modalBody.textContent = post.description;
+  modalLink.setAttribute('href', post.link);
 };
 
-const handleSubmit = (e, state, controllerHandler) => {
-  e.preventDefault();
-  const { value } = e.target.querySelector('input');
-  controllerHandler(value, state);
+const updatePostTitle = (id) => {
+  const title = document.querySelector(`a[data-id="${id}"]`);
+  title.classList.remove('fw-bold');
+  title.classList.add('fw-normal');
 };
 
-const watch = (state, handlers) => {
-  const form = document.querySelector('form');
-  const formFeedback = document.querySelector('.feedback');
-  const modal = document.querySelector('#modal');
-  const postsContainer = document.querySelector('.posts');
-  const feedsContainer = document.querySelector('.feeds');
-  const watchedUi = onChange(state.ui, (_path, value) => updatePostHeader(value));
-
-  const watchedMain = onChange(state.mainLogic, (path, value) => {
+const watch = (state, elements, i18Instance) => (
+  onChange(state, (path, value) => {
     switch (path) {
       case 'formMessage': {
-        renderFeedback(formFeedback, value);
+        renderFeedback(elements, value);
         break;
       }
-      case 'formState': {
-        updateForm(form, value);
+      case 'form.status': {
+        handleFormStatus(elements, value);
+        break;
+      }
+      case 'loadingProccess.status': {
+        handleLoadingStatus(elements, value);
+        break;
+      }
+      case 'form.error':
+      case 'loadingProccess.error': {
+        renderFeedback(elements, 'error', value);
+        break;
+      }
+      case 'loadingProccess.successMsg': {
+        renderFeedback(elements, 'success', value);
+        break;
+      }
+      case 'modal.postId': {
+        renderModal(elements, value, state.posts);
+        break;
+      }
+      case 'ui.viewedPosts': {
+        const id = Array.from(value)[value.size - 1];
+        updatePostTitle(id);
         break;
       }
       case 'feeds': {
-        renderFeeds(feedsContainer, value);
+        renderFeeds(elements, value, i18Instance);
         break;
       }
       case 'posts': {
-        renderPosts(postsContainer, value, watchedUi);
+        renderPosts(elements, value, state.ui.viewedPosts, i18Instance);
         break;
       }
       default:
         break;
     }
-  });
-  form.addEventListener('submit', (e) => handleSubmit(e, watchedMain, handlers.addRss));
-  modal.addEventListener('show.bs.modal', (e) => renderModal(e, watchedMain));
-  postsContainer.addEventListener('click', (e) => {
-    const tagName = e.target.tagName.toLowerCase();
-    if (tagName === 'button' || tagName === 'a') {
-      const { id } = e.target.dataset;
-      handlers.setViewed(watchedUi, id);
-    }
-  });
-
-  setTimeout(() => {
-    handlers.updateRss(watchedMain);
-  }, 5000);
-};
+  })
+);
 
 export default watch;
