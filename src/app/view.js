@@ -114,6 +114,7 @@ const handleLoadingStatus = ({ form, formInput: input, formButton: button }, sta
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
       form.reset();
+      input.focus();
       break;
     }
     default:
