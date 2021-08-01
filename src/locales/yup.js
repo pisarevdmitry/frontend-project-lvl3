@@ -1,9 +1,9 @@
 export default {
   mixed: {
     notOneOf: 'errors.exists',
+    required: 'errors.required',
   },
   string: {
-    min: 'errors.required',
     url: 'errors.url',
   },
 };

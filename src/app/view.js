@@ -10,12 +10,15 @@ const createElem = (elemName, ...classes) => {
 const createCard = (content) => {
   const card = createElem('div', 'card', 'border-0');
   const cardBody = createElem('div', 'card-body');
-  cardBody.innerHTML = `<h2 class="card-title h4">${content}</h2>`;
+  const cardTitle = createElem('h2');
+  cardTitle.classList.add('card-title', 'h4');
+  cardTitle.textContent = content;
+  cardBody.append(cardTitle);
   card.append(cardBody);
   return card;
 };
 
-const renderFeedback = ({ formFeedback }, type, value) => {
+const renderFeedback = ({ formFeedback }, type, value, i18Instance) => {
   if (type === 'error') {
     formFeedback.classList.remove('text-success');
     formFeedback.classList.add('text-danger');
@@ -23,7 +26,7 @@ const renderFeedback = ({ formFeedback }, type, value) => {
     formFeedback.classList.remove('text-danger');
     formFeedback.classList.add('text-success');
   }
-  formFeedback.textContent = value;
+  formFeedback.textContent = i18Instance.t(value);
 };
 
 const renderFeeds = ({ feedsContainer }, feeds, i18n) => {
@@ -98,7 +101,8 @@ const handleFormStatus = ({ formInput: input, formButton: button }, state) => {
   }
 };
 
-const handleLoadingStatus = ({ form, formInput: input, formButton: button }, state) => {
+const handleLoadingStatus = (elements, state, i18Instance) => {
+  const { form, formInput: input, formButton: button } = elements;
   switch (state) {
     case 'loading': {
       button.setAttribute('disabled', null);
@@ -113,6 +117,7 @@ const handleLoadingStatus = ({ form, formInput: input, formButton: button }, sta
     case 'success': {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
+      renderFeedback(elements, 'success', 'added', i18Instance);
       form.reset();
       input.focus();
       break;
@@ -123,7 +128,6 @@ const handleLoadingStatus = ({ form, formInput: input, formButton: button }, sta
 };
 
 const renderModal = ({ modalTitle, modalBody, modalLink }, id, posts) => {
-  if (!id) return;
   const post = _.find(posts, (el) => el.id === id);
   modalTitle.textContent = post.title;
   modalBody.textContent = post.description;
@@ -148,16 +152,12 @@ const watch = (state, elements, i18Instance) => (
         break;
       }
       case 'loadingProccess.status': {
-        handleLoadingStatus(elements, value);
+        handleLoadingStatus(elements, value, i18Instance);
         break;
       }
       case 'form.error':
       case 'loadingProccess.error': {
-        renderFeedback(elements, 'error', value);
-        break;
-      }
-      case 'loadingProccess.successMsg': {
-        renderFeedback(elements, 'success', value);
+        renderFeedback(elements, 'error', value, i18Instance);
         break;
       }
       case 'modal.postId': {

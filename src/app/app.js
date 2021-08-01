@@ -7,16 +7,11 @@ import watch from './view';
 import { ru, en, yup as yupLocale } from '../locales';
 import parse from './parser';
 
-const updateInterval = 5000;
+const updatingInterval = 5000;
 
 const validate = (value, addedUrls) => {
-  const schema = yup.string().min(1).url().notOneOf(addedUrls);
-  try {
-    schema.validateSync(value);
-    return null;
-  } catch (e) {
-    return e.message;
-  }
+  const schema = yup.string().required().url().notOneOf(addedUrls);
+  return schema.validate(value);
 };
 
 const addProxy = (url) => `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
@@ -27,50 +22,43 @@ const identifyError = (error) => {
   return 'errors.unknow';
 };
 
-const getRssData = (url) => (
-  axios.get(url)
-    .then((res) => {
-      const { data: { contents } } = res;
-      return contents;
-    })
-);
-
-const addRss = (url, state, i18Instance) => {
+const addRss = (url, state) => {
   state.loadingProccess.status = 'loading';
   state.loadingProccess.successMsg = '';
   const fetchUrl = addProxy(url);
-  getRssData(fetchUrl)
-    .then((data) => {
-      const { title, description, items: posts } = parse(data);
+  axios.get(fetchUrl)
+    .then(({ data: { contents } }) => {
+      const { title, description, items: posts } = parse(contents);
       const newFeed = { title, description, id: _.uniqueId() };
       const createdPosts = posts.map((elem) => ({ ...elem, feedId: newFeed.id, id: _.uniqueId() }));
       const newFeeds = [{ url, feed: newFeed }, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
       state.loadingProccess.status = 'success';
-      state.loadingProccess.successMsg = i18Instance.t('added');
       state.feeds = newFeeds;
       state.posts = newPosts;
     })
     .catch((error) => {
       state.loadingProccess.status = 'failure';
-      state.loadingProccess.error = i18Instance.t(identifyError(error));
+      state.loadingProccess.error = identifyError(error);
     });
 };
 
-const handleSubmit = (e, state, i18Instance) => {
+const handleSubmit = (e, state) => {
   e.preventDefault();
-  const { value } = e.target.querySelector('input');
+  const data = new FormData(e.target);
+  const url = data.get('url');
   state.form.status = 'validating';
   const addedUrls = state.feeds.map((feed) => feed.url);
-  const validationError = validate(value.trim(), addedUrls);
-  if (validationError) {
-    state.form.status = 'invalid';
-    state.form.error = i18Instance.t(validationError);
-    return;
-  }
-  state.form.status = 'valid';
-  state.form.error = '';
-  addRss(value, state, i18Instance);
+  validate(url.trim(), addedUrls)
+    .then(() => {
+      state.form.status = 'valid';
+      state.form.error = '';
+      addRss(url, state);
+    })
+    .catch((error) => {
+      state.form.status = 'invalid';
+      state.form.error = error.message;
+    });
 };
 
 const findNewPosts = (existedPosts, posts) => {
@@ -81,8 +69,8 @@ const findNewPosts = (existedPosts, posts) => {
 const updateRss = (state) => {
   const promises = state.feeds.map(({ url, feed }) => {
     const fetchUrl = addProxy(url);
-    return getRssData(fetchUrl).then((data) => {
-      const { items: posts } = parse(data);
+    return axios.get(fetchUrl).then(({ data: { contents } }) => {
+      const { items: posts } = parse(contents);
       const existingPosts = state.posts.filter((post) => post.feedId === feed.id);
       const newPosts = findNewPosts(existingPosts, posts);
       return newPosts.map((post) => ({ ...post, feedId: feed.id, id: _.uniqueId() }));
@@ -97,17 +85,10 @@ const updateRss = (state) => {
     }
     setTimeout(() => {
       updateRss(state);
-    }, updateInterval);
+    }, updatingInterval);
   });
 };
 
-const setViewed = (id, state) => {
-  state.ui.viewedPosts.add(id);
-};
-
-const handleModal = (postId, state) => {
-  state.modal.postId = postId;
-};
 const app = () => {
   const i18Instance = i18n.createInstance();
   yup.setLocale(yupLocale);
@@ -119,7 +100,6 @@ const app = () => {
     loadingProccess: {
       status: 'success',
       error: '',
-      successMsg: '',
     },
     modal: {
       postId: null,
@@ -130,20 +110,17 @@ const app = () => {
       viewedPosts: new Set(),
     },
   };
-  const form = document.querySelector('form');
-  const modal = document.querySelector('#modal');
-  const postsContainer = document.querySelector('.posts');
   const elements = {
-    form,
-    modal,
-    postsContainer,
+    form: document.querySelector('form'),
+    modal: document.querySelector('#modal'),
+    postsContainer: document.querySelector('.posts'),
     formFeedback: document.querySelector('.feedback'),
     feedsContainer: document.querySelector('.feeds'),
     modalTitle: document.querySelector('.modal-title'),
     modalBody: document.querySelector('.modal-body'),
     modalLink: document.querySelector('.modal .full-article'),
-    formButton: form.querySelector('button'),
-    formInput: form.querySelector('input'),
+    formButton: document.querySelector('form button'),
+    formInput: document.querySelector('form input'),
   };
 
   i18Instance.init({
@@ -151,23 +128,17 @@ const app = () => {
     resources: { ru, en },
   }).then(() => {
     const watched = watch(state, elements, i18Instance);
-    form.addEventListener('submit', (e) => handleSubmit(e, watched, i18Instance));
-    modal.addEventListener('show.bs.modal', (e) => {
-      setViewed(e.relatedTarget.dataset.id, watched);
-      handleModal(e.relatedTarget.dataset.id, watched);
-    });
-    modal.addEventListener('hide.bs.modal', () => handleModal(null, watched));
-    postsContainer.addEventListener('click', (e) => {
-      const tagName = e.target.tagName.toLowerCase();
-      if (tagName === 'button' || tagName === 'a') {
-        const { id } = e.target.dataset;
-        setViewed(id, watched);
-      }
+    elements.form.addEventListener('submit', (e) => handleSubmit(e, watched));
+    elements.postsContainer.addEventListener('click', (e) => {
+      const { id } = e.target.dataset;
+      if (!id) return;
+      watched.modal.postId = id;
+      watched.ui.viewedPosts.add(id);
     });
 
     setTimeout(() => {
       updateRss(watched);
-    }, updateInterval);
+    }, updatingInterval);
   });
 };
 
