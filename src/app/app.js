@@ -167,7 +167,7 @@ const app = () => {
 
     setTimeout(() => {
       updateRss(watched);
-    }, 5000);
+    }, updateInterval);
   });
 };
 
