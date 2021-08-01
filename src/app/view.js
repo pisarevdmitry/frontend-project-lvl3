@@ -10,8 +10,7 @@ const createElem = (elemName, ...classes) => {
 const createCard = (content) => {
   const card = createElem('div', 'card', 'border-0');
   const cardBody = createElem('div', 'card-body');
-  const cardTitle = createElem('h2');
-  cardTitle.classList.add('card-title', 'h4');
+  const cardTitle = createElem('h2', 'card-title', 'h4');
   cardTitle.textContent = content;
   cardBody.append(cardTitle);
   card.append(cardBody);
