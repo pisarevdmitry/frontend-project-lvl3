@@ -24,7 +24,6 @@ const identifyError = (error) => {
 
 const addRss = (url, state) => {
   state.loadingProccess.status = 'loading';
-  state.loadingProccess.successMsg = '';
   const fetchUrl = addProxy(url);
   axios.get(fetchUrl)
     .then(({ data: { contents } }) => {
