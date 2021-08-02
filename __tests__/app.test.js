@@ -111,7 +111,6 @@ test('modal', async () => {
   userEvent.click(buttonView);
   const modal = await screen.findByRole('dialog');
   expect(modal).toBeVisible();
-  expect(link).toHaveClass('fw-normal');
   const header = screen.getByRole('modal-title');
   const body = screen.getByRole('modal-body');
   expect(header.textContent.trim()).toBe('Kubernetes / DevOps: Деплой и эксплуатация');

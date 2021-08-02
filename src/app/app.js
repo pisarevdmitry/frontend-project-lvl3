@@ -23,7 +23,7 @@ const identifyError = (error) => {
 };
 
 const addRss = (url, state) => {
-  state.loadingProccess.status = 'loading';
+  state.loading = { status: 'loading', error: '' };
   const fetchUrl = addProxy(url);
   axios.get(fetchUrl)
     .then(({ data: { contents } }) => {
@@ -32,13 +32,12 @@ const addRss = (url, state) => {
       const createdPosts = posts.map((elem) => ({ ...elem, feedId: newFeed.id, id: _.uniqueId() }));
       const newFeeds = [{ url, feed: newFeed }, ...state.feeds];
       const newPosts = [...state.posts, ...createdPosts];
-      state.loadingProccess.status = 'success';
+      state.loading = { status: 'success', error: '' };
       state.feeds = newFeeds;
       state.posts = newPosts;
     })
     .catch((error) => {
-      state.loadingProccess.status = 'failure';
-      state.loadingProccess.error = identifyError(error);
+      state.loading = { status: 'failure', error: identifyError(error) };
     });
 };
 
@@ -46,17 +45,15 @@ const handleSubmit = (e, state) => {
   e.preventDefault();
   const data = new FormData(e.target);
   const url = data.get('url');
-  state.form.status = 'validating';
+  state.form = { status: 'validating', error: '' };
   const addedUrls = state.feeds.map((feed) => feed.url);
   validate(url.trim(), addedUrls)
     .then(() => {
-      state.form.status = 'valid';
-      state.form.error = '';
+      state.form = { status: 'valid', error: '' };
       addRss(url, state);
     })
     .catch((error) => {
-      state.form.status = 'invalid';
-      state.form.error = error.message;
+      state.form = { status: 'invalid', error: error.message };
     });
 };
 
@@ -96,7 +93,7 @@ const app = () => {
       status: 'valid',
       error: '',
     },
-    loadingProccess: {
+    loading: {
       status: 'success',
       error: '',
     },

@@ -28,7 +28,7 @@ const renderFeedback = ({ formFeedback }, type, value, i18Instance) => {
   formFeedback.textContent = i18Instance.t(value);
 };
 
-const renderFeeds = ({ feedsContainer }, feeds, i18n) => {
+const handleFeeds = ({ feedsContainer }, { feeds }, i18n) => {
   feedsContainer.innerHTML = '';
   const card = createCard(i18n.t('feeds'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
@@ -46,7 +46,7 @@ const renderFeeds = ({ feedsContainer }, feeds, i18n) => {
   feedsContainer.append(card);
 };
 
-const renderPosts = ({ postsContainer }, posts, viewedPosts, i18n) => {
+const handlePosts = ({ postsContainer }, { posts, ui: { viewedPosts } }, i18n) => {
   postsContainer.innerHTML = '';
   const card = createCard(i18n.t('posts'));
   const listGroup = createElem('ul', 'list-group', 'border-0', 'rounded-0');
@@ -76,8 +76,9 @@ const renderPosts = ({ postsContainer }, posts, viewedPosts, i18n) => {
   postsContainer.append(card);
 };
 
-const handleFormStatus = ({ formInput: input, formButton: button }, state) => {
-  switch (state) {
+const handleForm = (elements, { form }, i18n) => {
+  const { formInput: input, formButton: button } = elements;
+  switch (form.status) {
     case 'validating': {
       button.setAttribute('disabled', null);
       input.setAttribute('readonly', null);
@@ -87,6 +88,7 @@ const handleFormStatus = ({ formInput: input, formButton: button }, state) => {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
       input.classList.add('is-invalid');
+      renderFeedback(elements, 'error', form.error, i18n);
       break;
     }
     case 'valid': {
@@ -100,9 +102,9 @@ const handleFormStatus = ({ formInput: input, formButton: button }, state) => {
   }
 };
 
-const handleLoadingStatus = (elements, state, i18Instance) => {
+const handleLoadingStatus = (elements, { loading }, i18n) => {
   const { form, formInput: input, formButton: button } = elements;
-  switch (state) {
+  switch (loading.status) {
     case 'loading': {
       button.setAttribute('disabled', null);
       input.setAttribute('readonly', null);
@@ -111,12 +113,13 @@ const handleLoadingStatus = (elements, state, i18Instance) => {
     case 'failure': {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
+      renderFeedback(elements, 'error', loading.error, i18n);
       break;
     }
     case 'success': {
       button.removeAttribute('disabled');
       input.removeAttribute('readonly');
-      renderFeedback(elements, 'success', 'added', i18Instance);
+      renderFeedback(elements, 'success', 'added', i18n);
       form.reset();
       input.focus();
       break;
@@ -126,60 +129,26 @@ const handleLoadingStatus = (elements, state, i18Instance) => {
   }
 };
 
-const renderModal = ({ modalTitle, modalBody, modalLink }, id, posts) => {
-  const post = _.find(posts, (el) => el.id === id);
+const handleModal = ({ modalTitle, modalBody, modalLink }, { posts, modal }) => {
+  const post = _.find(posts, (el) => el.id === modal.postId);
   modalTitle.textContent = post.title;
   modalBody.textContent = post.description;
   modalLink.setAttribute('href', post.link);
 };
 
-const updatePostTitle = (id) => {
-  const title = document.querySelector(`a[data-id="${id}"]`);
-  title.classList.remove('fw-bold');
-  title.classList.add('fw-normal');
+const watch = (state, elements, i18Instance) => {
+  const mapping = {
+    feeds: handleFeeds,
+    posts: handlePosts,
+    form: handleForm,
+    loading: handleLoadingStatus,
+    'modal.postId': handleModal,
+    'ui.viewedPosts': handlePosts,
+  };
+  return onChange(state, (path) => {
+    if (!_.has(mapping, path)) return;
+    mapping[path](elements, state, i18Instance);
+  });
 };
-
-const watch = (state, elements, i18Instance) => (
-  onChange(state, (path, value) => {
-    switch (path) {
-      case 'formMessage': {
-        renderFeedback(elements, value);
-        break;
-      }
-      case 'form.status': {
-        handleFormStatus(elements, value);
-        break;
-      }
-      case 'loadingProccess.status': {
-        handleLoadingStatus(elements, value, i18Instance);
-        break;
-      }
-      case 'form.error':
-      case 'loadingProccess.error': {
-        renderFeedback(elements, 'error', value, i18Instance);
-        break;
-      }
-      case 'modal.postId': {
-        renderModal(elements, value, state.posts);
-        break;
-      }
-      case 'ui.viewedPosts': {
-        const id = Array.from(value)[value.size - 1];
-        updatePostTitle(id);
-        break;
-      }
-      case 'feeds': {
-        renderFeeds(elements, value, i18Instance);
-        break;
-      }
-      case 'posts': {
-        renderPosts(elements, value, state.ui.viewedPosts, i18Instance);
-        break;
-      }
-      default:
-        break;
-    }
-  })
-);
 
 export default watch;
