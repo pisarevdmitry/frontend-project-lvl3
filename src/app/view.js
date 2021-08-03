@@ -17,7 +17,7 @@ const createCard = (content) => {
   return card;
 };
 
-const renderFeedback = ({ formFeedback }, type, value, i18Instance) => {
+const renderFeedback = ({ formFeedback }, type, value, i18n) => {
   if (type === 'error') {
     formFeedback.classList.remove('text-success');
     formFeedback.classList.add('text-danger');
@@ -25,7 +25,7 @@ const renderFeedback = ({ formFeedback }, type, value, i18Instance) => {
     formFeedback.classList.remove('text-danger');
     formFeedback.classList.add('text-success');
   }
-  formFeedback.textContent = i18Instance.t(value);
+  formFeedback.textContent = i18n.t(value);
 };
 
 const handleFeeds = ({ feedsContainer }, { feeds }, i18n) => {
@@ -137,7 +137,7 @@ const handleModal = ({ modalTitle, modalBody, modalLink }, { posts, modal }) => 
 };
 
 const watch = (state, elements, i18Instance) => {
-  const mapping = {
+  const pathMapping = {
     feeds: handleFeeds,
     posts: handlePosts,
     form: handleForm,
@@ -146,8 +146,8 @@ const watch = (state, elements, i18Instance) => {
     'ui.viewedPosts': handlePosts,
   };
   return onChange(state, (path) => {
-    if (!_.has(mapping, path)) return;
-    mapping[path](elements, state, i18Instance);
+    if (!_.has(pathMapping, path)) return;
+    pathMapping[path](elements, state, i18Instance);
   });
 };
 
