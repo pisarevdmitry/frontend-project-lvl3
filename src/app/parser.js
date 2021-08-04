@@ -7,7 +7,7 @@ const parseItem = (item) => {
     title: itemTitle.textContent,
     description: itemDescription.textContent,
     link: itemLink.textContent,
-    pubDate: itemPubDate ?? new Date(itemPubDate.textContent),
+    pubDate: itemPubDate && new Date(itemPubDate.textContent),
   };
 };
 
