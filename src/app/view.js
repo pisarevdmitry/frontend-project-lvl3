@@ -146,8 +146,7 @@ const watch = (state, elements, i18Instance) => {
     'ui.viewedPosts': handlePosts,
   };
   return onChange(state, (path) => {
-    if (!_.has(pathMapping, path)) return;
-    pathMapping[path](elements, state, i18Instance);
+    pathMapping[path]?.(elements, state, i18Instance);
   });
 };
 

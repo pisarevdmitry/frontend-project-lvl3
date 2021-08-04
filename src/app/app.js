@@ -14,10 +14,15 @@ const validate = (value, addedUrls) => {
   return schema.validate(value);
 };
 
-const addProxy = (url) => `https://hexlet-allorigins.herokuapp.com/get?url=${encodeURIComponent(url)}&disableCache=true`;
+const addProxy = (url) => {
+  const proxifiedUrl = new URL('https://hexlet-allorigins.herokuapp.com/get');
+  proxifiedUrl.searchParams.set('url', url);
+  proxifiedUrl.searchParams.set('disableCache', true);
+  return proxifiedUrl;
+};
 
 const identifyError = (error) => {
-  if (axios.isAxiosError(error)) return 'errors.network';
+  if (_.has(error, 'isAxiosError')) return 'errors.network';
   if (_.has(error, 'isParsingError')) return 'errors.invalidRss';
   return 'errors.unknow';
 };
@@ -58,8 +63,8 @@ const handleSubmit = (e, state) => {
 };
 
 const findNewPosts = (existedPosts, posts) => {
-  const keyed = (_.keyBy(existedPosts, 'guid'));
-  return posts.filter((post) => !keyed[post.guid]);
+  const keyed = (_.keyBy(existedPosts, 'title'));
+  return posts.filter((post) => !keyed[post.title]);
 };
 
 const updateRss = (state) => {
@@ -119,7 +124,7 @@ const app = () => {
     formInput: document.querySelector('form input'),
   };
 
-  i18Instance.init({
+  return i18Instance.init({
     lng: 'ru',
     resources: { ru, en },
   }).then(() => {
